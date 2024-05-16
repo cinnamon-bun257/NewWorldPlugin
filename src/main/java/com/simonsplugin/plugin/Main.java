@@ -17,10 +17,9 @@ public class Main extends JavaPlugin{
     public void onEnable(){
         //plugin startup
         getLogger().info("New World Plugin enabled!");
-        this.getCommand("newworld").setExecutor(new NewworldCommandExecutor());
+        this.getCommand("newworld").setExecutor(new NewworldCommandExecutor(this));
         getServer().getPluginManager().registerEvents(new WorldChangeListener(), this);
-        getServer().getPluginManager().registerEvents(new PlayerDataSaver(this), this);
-
+        getServer().getPluginManager().registerEvents(new QuitWorldHandler(this), this);
         getServer().getPluginManager().registerEvents(new PlayerJoinHandler(this), this);
 
 

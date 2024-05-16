@@ -6,15 +6,23 @@ import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.WorldCreator;
 import org.bukkit.command.Command;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.GameMode;
+import org.bukkit.plugin.java.JavaPlugin;
+
 import java.io.File;
 import java.io.IOException;
 
 public class NewworldCommandExecutor implements CommandExecutor {
     boolean deletion;
+    private JavaPlugin plugin;
+
+    public NewworldCommandExecutor(JavaPlugin plugin) {
+        this.plugin = plugin;
+    }
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) {
@@ -44,18 +52,32 @@ public class NewworldCommandExecutor implements CommandExecutor {
         String worldName = args[0];
         World oldWorld = player.getWorld();
 
-
+        //save old player data, if deletion is false
+        if(!deletion){
+            LocationUtils.saveLocation(plugin, player, false);
+            InventoryUtils.saveInventory(plugin, player);
+            player.sendMessage("The old world [" + oldWorld.getName() + "] has not been deleted");
+        }
+        //create overworld
         WorldCreator creator = new WorldCreator(worldName);
         creator.hardcore(true);
         World newWorld = creator.createWorld();
+        // Create the Nether world
+        WorldCreator netherCreator = new WorldCreator(worldName + "_nether");
+        netherCreator.environment(World.Environment.NETHER);
+        World newWorldNether = netherCreator.createWorld();
+
+        // Create the End world
+        WorldCreator endCreator = new WorldCreator(worldName + "_the_end");
+        endCreator.environment(World.Environment.THE_END);
+        World newWorldEnd = endCreator.createWorld();
         for (String rule : oldWorld.getGameRules()) {
             String value = oldWorld.getGameRuleValue(rule);
             newWorld.setGameRuleValue(rule, value);
+            newWorldNether.setGameRuleValue(rule, value);
+            newWorldEnd.setGameRuleValue(rule, value);
         }
-        long currentTime = oldWorld.getTime();
-        newWorld.setTime(currentTime);
-        
-        
+        newWorld.setTime(0);
 
         Location spawnLocation = newWorld.getSpawnLocation();
         for (Player p : Bukkit.getServer().getOnlinePlayers()) {
@@ -86,7 +108,6 @@ public class NewworldCommandExecutor implements CommandExecutor {
             if (!deleted ) player.sendMessage("The old world [" + oldWorld.getName() + "] could not be deleted"); else player.sendMessage("old world [" + oldWorld.getName() + "] deleted");
 
         }
-        if(!deletion)player.sendMessage("The old world [" + oldWorld.getName() + "] has not been deleted");
         return true;
     }
     private boolean unloadWorld(World world, Player player) {
