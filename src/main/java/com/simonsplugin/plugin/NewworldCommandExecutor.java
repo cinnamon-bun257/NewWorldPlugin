@@ -54,8 +54,12 @@ public class NewworldCommandExecutor implements CommandExecutor {
 
         //save old player data, if deletion is false
         if(!deletion || oldWorld.getName().equals("world")){
-            LocationUtils.saveLocation(plugin, player, worldName, false);
-            InventoryUtils.saveInventory(plugin, player);
+            for (Player p : Bukkit.getServer().getOnlinePlayers()){
+                LocationUtils.saveLocation(plugin, p, oldWorld.getName(), false);
+                InventoryUtils.saveInventory(plugin, p);
+                AdvancementUtils.saveAdvancements(plugin, p);
+            }
+
             player.sendMessage("The old world [" + oldWorld.getName() + "] has not been deleted");
         }
         //create overworld
@@ -71,6 +75,8 @@ public class NewworldCommandExecutor implements CommandExecutor {
         WorldCreator endCreator = new WorldCreator(worldName + "_the_end");
         endCreator.environment(World.Environment.THE_END);
         World newWorldEnd = endCreator.createWorld();
+
+
         for (String rule : oldWorld.getGameRules()) {
             String value = oldWorld.getGameRuleValue(rule);
             newWorld.setGameRuleValue(rule, value);
@@ -89,6 +95,8 @@ public class NewworldCommandExecutor implements CommandExecutor {
             // Clear the player's inventory
             PlayerInventory inventory = p.getInventory();
             inventory.clear();
+
+            AdvancementUtils.clearPlayerAdvancements(p);
 
             // Clear any potion effects
             p.getActivePotionEffects().forEach(potionEffect ->

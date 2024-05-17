@@ -1,5 +1,6 @@
 package com.simonsplugin.plugin;
 
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -18,7 +19,8 @@ public class QuitWorldHandler implements Listener {
     }
     @EventHandler
     public void OnPlayerQuit(PlayerQuitEvent event){
-        LocationUtils.saveLocation(plugin, event.getPlayer(), event.getPlayer().getWorld().toString(), true);
+        LocationUtils.saveLocation(plugin, event.getPlayer(), event.getPlayer().getWorld().getName(), true);
+        plugin.getLogger().warning("player left in world " + event.getPlayer().getWorld().toString() );
     }
 
     public static void saveData(boolean loginLocation, Player player){

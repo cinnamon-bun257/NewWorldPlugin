@@ -1,5 +1,6 @@
 package com.simonsplugin.plugin;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -35,10 +36,17 @@ public class ChangeWorldCommandExecutor implements CommandExecutor {
         }
 
         String worldName = args[0];
-        LocationUtils.saveLocation(plugin, player, player.getWorld().getName(), false);
-        InventoryUtils.saveInventory(plugin, player);
-        LocationUtils.setLocation(plugin, player, worldName);
-        InventoryUtils.setInventory(plugin, player, worldName);
+        for(Player p: Bukkit.getServer().getOnlinePlayers()){
+            LocationUtils.saveLocation(plugin, p, p.getWorld().getName(), false);
+            InventoryUtils.saveInventory(plugin, p);
+            AdvancementUtils.saveAdvancements(plugin, p);
+            AdvancementUtils.loadAdvancements(plugin, p, worldName);
+            LocationUtils.setLocation(plugin, p, worldName);
+            InventoryUtils.setInventory(plugin, p, worldName);
+
+
+        }
+
         return true;
 
     }
