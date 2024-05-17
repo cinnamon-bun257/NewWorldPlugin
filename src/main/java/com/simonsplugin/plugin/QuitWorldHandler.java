@@ -18,7 +18,7 @@ public class QuitWorldHandler implements Listener {
     }
     @EventHandler
     public void OnPlayerQuit(PlayerQuitEvent event){
-        LocationUtils.saveLocation(plugin, event.getPlayer(), true);
+        LocationUtils.saveLocation(plugin, event.getPlayer(), event.getPlayer().getWorld().toString(), true);
     }
 
     public static void saveData(boolean loginLocation, Player player){

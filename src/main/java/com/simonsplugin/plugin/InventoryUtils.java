@@ -25,18 +25,23 @@ public class InventoryUtils {
             e.printStackTrace();
         }
     }
-    public static void setInventory (JavaPlugin plugin, Player player){
+    public static void setInventory (JavaPlugin plugin, Player player, String worldName){
         File inventoryFile = new File(plugin.getDataFolder(), player.getUniqueId().toString() + "_inventory.yml");
         if (!inventoryFile.exists()) {
             return; // No saved inventory to restore
         }
 
         YamlConfiguration config = YamlConfiguration.loadConfiguration(inventoryFile);
-
+        String path = worldName;
         // Deserialize the inventory
-        ItemStack[] inventoryContents = ((List<ItemStack>) config.get("inventory")).toArray(new ItemStack[0]);
-        ItemStack[] armorContents = ((List<ItemStack>) config.get("armor")).toArray(new ItemStack[0]);
-
+        List<?> inventoryList = config.getList(path + ".inventory");
+        List<?> armorList = config.getList(path + ".armor");
+        if (inventoryList == null || armorList == null) {
+            player.sendMessage("inventory or armor haven't been found");
+            return;
+        }
+        ItemStack[] inventoryContents = inventoryList.toArray(new ItemStack[0]);
+        ItemStack[] armorContents = armorList.toArray(new ItemStack[0]);
         PlayerInventory inventory = player.getInventory();
         inventory.setContents(inventoryContents);
         inventory.setArmorContents(armorContents);

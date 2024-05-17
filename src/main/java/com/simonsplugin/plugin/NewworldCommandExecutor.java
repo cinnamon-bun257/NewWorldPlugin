@@ -53,8 +53,8 @@ public class NewworldCommandExecutor implements CommandExecutor {
         World oldWorld = player.getWorld();
 
         //save old player data, if deletion is false
-        if(!deletion){
-            LocationUtils.saveLocation(plugin, player, false);
+        if(!deletion || oldWorld.getName().equals("world")){
+            LocationUtils.saveLocation(plugin, player, worldName, false);
             InventoryUtils.saveInventory(plugin, player);
             player.sendMessage("The old world [" + oldWorld.getName() + "] has not been deleted");
         }

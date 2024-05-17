@@ -42,7 +42,7 @@ public class LocationUtils {
         public static void setLocation (JavaPlugin plugin, Player player, String worldName){
             File locationPlayerDataFile = new File(plugin.getDataFolder(), "locationPlayerdata.yml");
             YamlConfiguration config = YamlConfiguration.loadConfiguration(locationPlayerDataFile);
-            String path = player.getUniqueId().toString() + ".otherWorlds" + worldName;
+            String path = player.getUniqueId().toString() + ".otherWorlds." + worldName;
             if (config.contains(path)) {
                 plugin.getLogger().info("playerdata found");
                 World world = Bukkit.getWorld(worldName);
@@ -63,10 +63,11 @@ public class LocationUtils {
                 Location location = new Location(world, x, y, z, yaw, pitch);
                 player.teleport(location);
                 plugin.getLogger().info("player put in right world");
+
             }
         }
 
-        public static void saveLocation (JavaPlugin plugin, Player player, boolean isLoginLocation){
+        public static void saveLocation (JavaPlugin plugin, Player player, String worldName, boolean isLoginLocation){
             File playerDataFile = new File(plugin.getDataFolder(), "locationPlayerdata.yml");
             YamlConfiguration config = YamlConfiguration.loadConfiguration(playerDataFile);
             String path;
@@ -74,7 +75,7 @@ public class LocationUtils {
                 path = player.getUniqueId().toString() + ".loginLocation";
             }
             else{
-                path = player.getUniqueId().toString() + ".otherWorlds." + player.getWorld().getName();
+                path = player.getUniqueId().toString() + ".otherWorlds." + worldName;
             }
 
             config.set(path + ".world", player.getWorld().getName());

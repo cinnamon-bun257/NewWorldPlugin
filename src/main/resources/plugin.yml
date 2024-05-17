@@ -7,7 +7,14 @@ commands:
     description: Creates a new world and teleports every player in it
     usage: /newworld <new world name> <delete old world [boolean]>
     permission: newworld.use
+  changeworld:
+    description: changes the world you're currently in
+    usage: /changeworld <worldName>
+    permission: changeworld.use
   permissions:
     newworld.use:
       description: Allows using the newworld command
+      default: op
+    changeworld.use:
+      description: Allows using the changeworld command
       default: op
