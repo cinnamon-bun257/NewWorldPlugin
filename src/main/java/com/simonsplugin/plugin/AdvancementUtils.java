@@ -72,7 +72,7 @@ public class AdvancementUtils {
             boolean isDone = advancementsSection.getBoolean(advancementKey);
             if (isDone) {
                 try {
-                    plugin.getLogger().info("Processing advancement key: " + advancementKey); // Debugging log
+                    //plugin.getLogger().info("Processing advancement key: " + advancementKey); // Debugging log
                     NamespacedKey key = parseKey(advancementKey);
                     if (key != null) {
                         Advancement advancement = Bukkit.getAdvancement(key);

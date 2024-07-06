@@ -15,7 +15,8 @@ public class PlayerJoinHandler implements Listener{
     }
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
-         LocationUtils.setLocation(plugin, event.getPlayer());
+         String baseWorldName = LocationUtils.getLoginWorld(plugin, event.getPlayer());
+         LocationUtils.setLocation(plugin, event.getPlayer(), baseWorldName, true );
     }
 }
 

@@ -35,15 +35,20 @@ public class ChangeWorldCommandExecutor implements CommandExecutor {
             return true;
         }
 
-        String worldName = args[0];
+        String baseWorldName = args[0];
         for(Player p: Bukkit.getServer().getOnlinePlayers()){
-            LocationUtils.saveLocation(plugin, p, p.getWorld().getName(), false);
-            InventoryUtils.saveInventory(plugin, p);
-            AdvancementUtils.saveAdvancements(plugin, p);
-            AdvancementUtils.loadAdvancements(plugin, p, worldName);
-            LocationUtils.setLocation(plugin, p, worldName);
-            InventoryUtils.setInventory(plugin, p, worldName);
-
+            Bukkit.getScheduler().runTaskAsynchronously(plugin, ()->{
+                LocationUtils.saveLocation(plugin, p, false);
+                InventoryUtils.saveInventory(plugin, p);
+                AdvancementUtils.saveAdvancements(plugin, p);
+                HealthUtils.saveHealthData(plugin, p);
+            });
+            Bukkit.getScheduler().runTask(plugin, ()-> {
+                AdvancementUtils.loadAdvancements(plugin, p, baseWorldName);
+                LocationUtils.setLocation(plugin, p, baseWorldName, false);
+                InventoryUtils.setInventory(plugin, p, baseWorldName);
+                HealthUtils.loadHealthData(plugin, p, baseWorldName);
+            });
 
         }
 

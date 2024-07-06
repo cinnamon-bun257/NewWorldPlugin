@@ -11,10 +11,20 @@ commands:
     description: changes the world you're currently in
     usage: /changeworld <worldName>
     permission: changeworld.use
+  bp:
+    description: opens a backpack, that is shared across all players in a world
+    usage: /bp
+  sethardcore:
+      description: changes whether worlds should be in Hardcore mode or not
+      usage: /sethardcore <true|false>
+      permission: sethardcore.use
   permissions:
     newworld.use:
       description: Allows using the newworld command
       default: op
     changeworld.use:
       description: Allows using the changeworld command
+      default: op
+    sethardcore.use:
+      description: Allows changing the hardcore Setting
       default: op
