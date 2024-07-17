@@ -16,6 +16,7 @@ public class Main extends JavaPlugin{
     private File backpackFile;
     private FileConfiguration backpackConfig;
 
+    private Randomizer randomizer;
 
     @Override
     public void onEnable() {
@@ -31,7 +32,7 @@ public class Main extends JavaPlugin{
         backpackConfig = YamlConfiguration.loadConfiguration(backpackFile);
         backpack.loadBackpacks(backpackConfig);
 
-
+        this.randomizer = new Randomizer(this);
 
         getLogger().info("New World Plugin enabled!");
         Objects.requireNonNull(this.getCommand("newworld")).setExecutor(new NewworldCommandExecutor(this));
@@ -40,13 +41,13 @@ public class Main extends JavaPlugin{
         Objects.requireNonNull(this.getCommand("bp")).setExecutor((new BackpackCommandExecutor(backpack)));
 
 
-
         getServer().getPluginManager().registerEvents(new QuitWorldHandler(this), this);
         getServer().getPluginManager().registerEvents(new PlayerJoinHandler(this), this);
         getServer().getPluginManager().registerEvents(new CustomPortalListener(this), this);
         //getServer().getPluginManager().registerEvents(new AdvancementListener(this), this);
         getServer().getPluginManager().registerEvents(new PlayerDeathListener(this), this);
         getServer().getPluginManager().registerEvents(new BackpackListener(backpack), this);
+        getServer().getPluginManager().registerEvents(new RandomizerListener(randomizer), this);
 
     }
 
@@ -70,6 +71,8 @@ public class Main extends JavaPlugin{
         } else {
             getLogger().warning("Backpack config or file is null, skipping save.");
         }
+
+        randomizer.saveRandomizedDrops();
         getLogger().info("New World Plugin disabled");
 
     }
