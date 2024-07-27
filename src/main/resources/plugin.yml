@@ -1,7 +1,7 @@
 name: NewWorldPlugin
 version: 1.0
 main: com.simonsplugin.plugin.Main
-api-version: 1.20
+api-version: 1.21
 commands:
   newworld:
     description: Creates a new world and teleports every player in it
@@ -15,9 +15,13 @@ commands:
     description: opens a backpack, that is shared across all players in a world
     usage: /bp
   sethardcore:
-      description: changes whether worlds should be in Hardcore mode or not
-      usage: /sethardcore <true|false>
-      permission: sethardcore.use
+    description: changes whether worlds should be in Hardcore mode or not
+    usage: /sethardcore <true|false>
+    permission: sethardcore.use
+  setminerandomizer:
+    description: changes whether the randomizer is active or not
+    usage: /setminerandomizer <true|false>
+    permission: setminerandomizer.use
   permissions:
     newworld.use:
       description: Allows using the newworld command
@@ -27,4 +31,6 @@ commands:
       default: op
     sethardcore.use:
       description: Allows changing the hardcore Setting
+      default: op
+    setminerandomizer.use:
       default: op

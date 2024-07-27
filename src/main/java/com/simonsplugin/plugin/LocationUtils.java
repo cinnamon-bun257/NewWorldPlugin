@@ -37,13 +37,13 @@ public class LocationUtils {
         }
     }
 
-    public static String getLoginWorld(JavaPlugin plugin, Player player) {
+    public String getLoginWorld(JavaPlugin plugin, Player player) {
         File locationPlayerDataFile = new File(plugin.getDataFolder(), "locationPlayerdata.yml");
         YamlConfiguration config = YamlConfiguration.loadConfiguration(locationPlayerDataFile);
         return config.getString(player.getName() + ".loginLocation.baseWorldName");
     }
 
-    public static void setLocation(JavaPlugin plugin, Player player, String baseWorldName, boolean isLogin) {
+    public void setLocation(JavaPlugin plugin, Player player, String baseWorldName, boolean isLogin) {
         File locationPlayerDataFile = new File(plugin.getDataFolder(), "locationPlayerdata.yml");
         YamlConfiguration config = YamlConfiguration.loadConfiguration(locationPlayerDataFile);
         String path;
@@ -79,16 +79,16 @@ public class LocationUtils {
         } else plugin.getLogger().warning("Base World not found");
     }
 
-    public static void saveLocation(JavaPlugin plugin, Player player, boolean isLoginLocation) {
+    public void saveLocation(JavaPlugin plugin, Player player, boolean isLoginLocation) {
         File playerDataFile = new File(plugin.getDataFolder(), "locationPlayerdata.yml");
         YamlConfiguration config = YamlConfiguration.loadConfiguration(playerDataFile);
         String path;
-        String baseWorldName = player.getWorld().getName().replace("_nether", "").replace("_the_end", "");
+        String baseWorldName = Main.getBaseWorldName(player.getWorld().getName());
         if (isLoginLocation) {
-            path = player.getUniqueId().toString() + ".loginLocation";
+            path = player.getUniqueId() + ".loginLocation";
             config.set(path + ".baseWorldName", baseWorldName);
         } else {
-            path = player.getUniqueId().toString() + "." + baseWorldName;
+            path = player.getUniqueId() + "." + baseWorldName;
         }
 
         config.set(path + ".world", player.getWorld().getName());
@@ -97,7 +97,8 @@ public class LocationUtils {
         config.set(path + ".z", player.getLocation().getZ());
         config.set(path + ".yaw", player.getLocation().getYaw());
         config.set(path + ".pitch", player.getLocation().getPitch());
-        config.set(path + ".respawnPoint", player.getRespawnLocation());
+        if(player.getRespawnLocation()!= null) config.set(path + ".respawnPoint", player.getWorld().getSpawnLocation());
+        else config.set(path + ".respawnPoint", player.getRespawnLocation());
 
         try {
             config.save(playerDataFile);
@@ -107,7 +108,7 @@ public class LocationUtils {
         }
     }
 
-    public static void teleportPlayersToNewWorld(JavaPlugin plugin, Location location) {
+    public void teleportPlayersToNewWorld(JavaPlugin plugin, Location location) {
         Bukkit.getScheduler().runTask(plugin, () -> {
             for (Player p : Bukkit.getServer().getOnlinePlayers()) {
                 p.setHealth(20.0); // 20 health points is equivalent to 10 hearts
@@ -115,7 +116,6 @@ public class LocationUtils {
                 p.setLevel(0);
                 p.setExp(0.0f);
                 p.getInventory().clear();
-                AdvancementUtils.clearPlayerAdvancements(p);
                 p.getActivePotionEffects().forEach(potionEffect ->
                         p.removePotionEffect(potionEffect.getType())
                 );

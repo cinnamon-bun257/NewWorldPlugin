@@ -11,9 +11,18 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class ChangeWorldCommandExecutor implements CommandExecutor {
 
     private JavaPlugin plugin;
+    private LocationUtils locationUtils;
+    private  AdvancementUtils advancementUtils;
+    private HealthUtils healthUtils;
+    private InventoryUtils inventoryUtils;
 
-    public ChangeWorldCommandExecutor(JavaPlugin plugin) {
+
+    public ChangeWorldCommandExecutor(JavaPlugin plugin, LocationUtils locationUtils, AdvancementUtils advancementUtils, HealthUtils healthUtils, InventoryUtils inventoryUtils ) {
         this.plugin = plugin;
+        this.advancementUtils = advancementUtils;
+        this.healthUtils = healthUtils;
+        this.inventoryUtils = inventoryUtils;
+        this.locationUtils = locationUtils;
     }
 
     @Override
@@ -36,23 +45,44 @@ public class ChangeWorldCommandExecutor implements CommandExecutor {
         }
 
         String baseWorldName = args[0];
+        sender.sendMessage("worldName:" + baseWorldName + "|");
         for(Player p: Bukkit.getServer().getOnlinePlayers()){
-            Bukkit.getScheduler().runTaskAsynchronously(plugin, ()->{
-                LocationUtils.saveLocation(plugin, p, false);
-                InventoryUtils.saveInventory(plugin, p);
-                AdvancementUtils.saveAdvancements(plugin, p);
-                HealthUtils.saveHealthData(plugin, p);
-            });
-            Bukkit.getScheduler().runTask(plugin, ()-> {
-                AdvancementUtils.loadAdvancements(plugin, p, baseWorldName);
-                LocationUtils.setLocation(plugin, p, baseWorldName, false);
-                InventoryUtils.setInventory(plugin, p, baseWorldName);
-                HealthUtils.loadHealthData(plugin, p, baseWorldName);
-            });
+            // Ensuring all save operations are complete before starting load operations
+            Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                savePlayerData(p);
 
+                // Ensuring all load operations run on the main thread after saving
+                Bukkit.getScheduler().runTask(plugin, () -> {
+                    loadPlayerData(p, baseWorldName);
+                });
+            });
         }
-
         return true;
+    }
 
+    private void savePlayerData(Player player) {
+        try {
+            locationUtils.saveLocation(plugin, player, false);
+            inventoryUtils.saveInventory(plugin, player);
+            advancementUtils.saveAdvancements(plugin, player);
+            healthUtils.saveHealthData( player);
+            player.sendMessage("Data saved successfully.");
+        } catch (Exception e) {
+            player.sendMessage("Error saving data.");
+            e.printStackTrace();
+        }
+    }
+
+    private void loadPlayerData(Player player, String worldName) {
+        try {
+            locationUtils.setLocation(plugin, player, worldName, false);
+            inventoryUtils.setInventory(plugin, player, worldName);
+            advancementUtils.loadAdvancements(plugin, player, worldName);
+            healthUtils.loadHealthData( player, worldName);
+            player.sendMessage("Data loaded for world: " + worldName);
+        } catch (Exception e) {
+            player.sendMessage("Error loading data for world: " + worldName);
+            e.printStackTrace();
+        }
     }
 }

@@ -1,3 +1,4 @@
+
 plugins {
     id("java")
 }
@@ -12,7 +13,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly("org.spigotmc:spigot-api:1.20.4-R0.1-SNAPSHOT")
+    compileOnly("org.spigotmc:spigot-api:1.21-R0.1-SNAPSHOT")
     compileOnly(group = "org.popcraft", name = "chunky-common", version = "1.3.38")
     testImplementation(platform("org.junit:junit-bom:5.9.1"))
     testImplementation("org.junit.jupiter:junit-jupiter")
@@ -21,4 +22,9 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+}
+
+tasks.jar {
+    archiveFileName.set("NewWorldPlugin_1.21.jar")
+    destinationDirectory.set(file("$buildDir/libs"))
 }

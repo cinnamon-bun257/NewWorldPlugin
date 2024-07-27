@@ -7,21 +7,27 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockDropItemEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
-
+import org.bukkit.event.EventHandler;
 import java.util.List;
 
 public class RandomizerListener implements Listener {
     private Randomizer randomizer;
+    private PluginConfig pluginConfig;
 
-    public RandomizerListener(Randomizer randomizer) {
+    public RandomizerListener(Randomizer randomizer, PluginConfig pluginConfig) {
         this.randomizer = randomizer;
+        this.pluginConfig = pluginConfig;
     }
 
+    @EventHandler
     public void onBlockDropItem(BlockDropItemEvent event) {
+
+        if (!pluginConfig.doMineRandomizing)return;
+
         List<Item> items = event.getItems();
 
         Material blockType = event.getBlockState().getType();
-        ItemStack randomizedType = randomizer.getRandomizedItem(blockType);
+        ItemStack randomizedType = randomizer.getRandomizedItem(blockType, event.getBlock().getWorld());
 
         int totalItems = 0;
         if(items.isEmpty()) totalItems = 1;

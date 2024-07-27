@@ -10,7 +10,8 @@ import java.io.File;
 public class PluginConfig {
     private File pluginConfigFile;
     private FileConfiguration pluginConfigFileConfiguration;
-    public static boolean isHardcore;
+    public boolean isHardcore;
+    public boolean doMineRandomizing;
     public PluginConfig(JavaPlugin plugin){
         this.pluginConfigFile = new File(plugin.getDataFolder(), "pluginConfig.yml");
         if(!pluginConfigFile.exists()){
@@ -18,14 +19,17 @@ public class PluginConfig {
             plugin.saveResource("pluginConfig.yml", false);
         }
         this.pluginConfigFileConfiguration = YamlConfiguration.loadConfiguration(pluginConfigFile);
+        loadPluginConfig();
     }
-    public void loadPluginConfig(){
-        this.isHardcore = this.pluginConfigFileConfiguration.getBoolean(".isHardcore");
+    private void loadPluginConfig(){
+
+        isHardcore = this.pluginConfigFileConfiguration.getBoolean(".isHardcore");
+        doMineRandomizing = this.pluginConfigFileConfiguration.getBoolean(".doMineRandomizing");
     }
     public void savePluginConfig(){
         if(pluginConfigFile!= null && pluginConfigFileConfiguration != null){
-            pluginConfigFileConfiguration.set(".isHardcore", this.isHardcore);
-
+            pluginConfigFileConfiguration.set(".isHardcore", isHardcore);
+            pluginConfigFileConfiguration.set(".doMineRandomizing", doMineRandomizing);
         }
     }
 }

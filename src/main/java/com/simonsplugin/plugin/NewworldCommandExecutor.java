@@ -20,10 +20,21 @@ public class NewworldCommandExecutor implements CommandExecutor {
     ChunkyAPI chunky = Bukkit.getServer().getServicesManager().load(ChunkyAPI.class);
     private boolean deletion;
     private final JavaPlugin plugin;
+    private PluginConfig pluginConfig;
+    private LocationUtils locationUtils;
+    private  AdvancementUtils advancementUtils;
+    private HealthUtils healthUtils;
+    private InventoryUtils inventoryUtils;
 
 
-    public NewworldCommandExecutor(JavaPlugin plugin) {
+
+    public NewworldCommandExecutor(JavaPlugin plugin, PluginConfig pluginConfig, LocationUtils locationUtils, AdvancementUtils advancementUtils, HealthUtils healthUtils, InventoryUtils inventoryUtils) {
         this.plugin = plugin;
+        this.pluginConfig = pluginConfig;
+        this.advancementUtils = advancementUtils;
+        this.healthUtils = healthUtils;
+        this.inventoryUtils = inventoryUtils;
+        this.locationUtils = locationUtils;
     }
 
     @Override
@@ -85,11 +96,11 @@ public class NewworldCommandExecutor implements CommandExecutor {
 
 
                 newWorld.setTime(0);
-                newWorld.setHardcore(PluginConfig.isHardcore);
+                newWorld.setHardcore(pluginConfig.isHardcore);
             }
 
 
-
+        assert newWorld != null;
         Location location = newWorld.getSpawnLocation();
 
         chunky.cancelTask(oldWorld.getName());
@@ -102,26 +113,32 @@ public class NewworldCommandExecutor implements CommandExecutor {
                 // Save old player data, if deletion is false
                 if (!deletion || oldWorld.getName().equals("world")) {
                     Bukkit.getScheduler().runTaskAsynchronously(plugin, ()-> {for (Player p : Bukkit.getServer().getOnlinePlayers()) {
-                        LocationUtils.saveLocation(plugin, p, false);
-                        InventoryUtils.saveInventory(plugin, p);
-                        AdvancementUtils.saveAdvancements(plugin, p);
-                        HealthUtils.saveHealthData(plugin, p);
+                        locationUtils.saveLocation(plugin, p, false);
+                        inventoryUtils.saveInventory(plugin, p);
+                        advancementUtils.saveAdvancements(plugin, p);
+                        healthUtils.saveHealthData(p);
                     }
                         player.sendMessage("The old world [" + oldWorld.getName() + "] has not been deleted");
                     });
 
                 }
-                LocationUtils.teleportPlayersToNewWorld(plugin, location);
-                chunky.startTask(baseWorldName , "square", 0, 0, 1000, 1000, "concentric");
+                for (Player p : Bukkit.getServer().getOnlinePlayers()){
+                    advancementUtils.clearPlayerAdvancements(p);
+                }
+                locationUtils.teleportPlayersToNewWorld(plugin, location);
+                chunky.startTask(baseWorldName , "square", 0, 0, 1000, 1000, "region");
                 chunky.onGenerationComplete(event1 -> {
                     plugin.getLogger().info("Second Generation Complete for [" + baseWorldName + "]");
-                    chunky.startTask(baseWorldName + "_nether", "square", 0, 0, 1000, 1000, "concentric");
+                    chunky.startTask(baseWorldName + "_nether", "square", 0, 0, 1000, 1000, "region");
                     chunky.onGenerationComplete(event2 -> {
                         plugin.getLogger().info("First Generation Complete for [" + baseWorldName + "_nether]");
-                        chunky.startTask(baseWorldName + "_the_end", "square", 0, 0, 500, 500, "concentric");
+                        chunky.startTask(baseWorldName + "_the_end", "square", 0, 0, 500, 500, "region");
                         chunky.onGenerationComplete(event3 -> {
                             plugin.getLogger().info("First Generation Complete for [" + baseWorldName + "_the_end]");
-                            chunky.startTask(baseWorldName, "square", 0, 0, 5000, 5000, "concentric");
+                            chunky.startTask(baseWorldName, "square", 0, 0, 5000, 5000, "region");
+                            chunky.onGenerationComplete(event4 -> {
+                                chunky.cancelTask(baseWorldName);
+                            });
                         });
                     });
                 });

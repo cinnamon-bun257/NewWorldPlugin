@@ -1,5 +1,6 @@
 package com.simonsplugin.plugin;
 
+import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -9,16 +10,16 @@ import java.io.File;
 import java.io.IOException;
 
 class HealthUtils {
-  private static JavaPlugin plugin;
+  private JavaPlugin plugin;
   
   public HealthUtils(JavaPlugin plugin){
     this.plugin = plugin;
   }
   
-  public static void saveHealthData (JavaPlugin plugin, Player player){
-    File healthFile = new File(plugin.getDataFolder(), "healthData_" + player.getUniqueId() + ".yml");
+  public void saveHealthData (Player player){
+    File healthFile = new File(plugin.getDataFolder(), "healthData_" + player.getName() + ".yml");
     YamlConfiguration config = YamlConfiguration.loadConfiguration(healthFile);
-    String path = player.getWorld().getName();
+    String path = Main.getBaseWorldName(player.getWorld().getName());
 
     config.set(path + ".health", player.getHealth());
     config.set(path + ".food", player.getFoodLevel());
@@ -38,8 +39,8 @@ class HealthUtils {
     }
 
   }
-  public static void loadHealthData (JavaPlugin plugin, Player player, String worldName){
-    File healthFile = new File(plugin.getDataFolder(), "healthData_" + player.getUniqueId() + ".yml");
+  public void loadHealthData (Player player, String worldName){
+    File healthFile = new File(plugin.getDataFolder(), "healthData_" + player.getName() + ".yml");
     YamlConfiguration config = YamlConfiguration.loadConfiguration(healthFile);
       if(config.contains(worldName)){
       double health = config.getDouble(worldName + ".health");

@@ -1,121 +1,112 @@
 package com.simonsplugin.plugin;
 
+import org.bukkit.Bukkit;
 import org.bukkit.GameRule;
 import org.bukkit.NamespacedKey;
-import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.Bukkit;
 import org.bukkit.advancement.Advancement;
 import org.bukkit.advancement.AdvancementProgress;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-
-import org.bukkit.configuration.ConfigurationSection;
-
-
+import java.util.concurrent.ConcurrentHashMap;
 
 public class AdvancementUtils {
-    public static boolean isRestoring =false;
-    public static void saveAdvancements(JavaPlugin plugin, Player player) {
-        File advancementsFile = new File(plugin.getDataFolder(), player.getUniqueId().toString() + "_advancements.yml");
-        YamlConfiguration config = YamlConfiguration.loadConfiguration(advancementsFile);
-        String path = player.getWorld().getName();
-        Map<String, Boolean> advancements = new HashMap<>();
+    private final Map<Player, YamlConfiguration> playerConfigs = new ConcurrentHashMap<>();
+
+    public void saveAdvancements(JavaPlugin plugin, Player player) {
+        YamlConfiguration config = getPlayerConfig(plugin, player);
+        String path = Main.getBaseWorldName(player.getWorld().getName());
+        Map<String, Boolean> advancements = new ConcurrentHashMap<>();
 
         for (Iterator<Advancement> it = Bukkit.advancementIterator(); it.hasNext(); ) {
             Advancement advancement = it.next();
-            if (player.getAdvancementProgress(advancement).isDone()) {
-                advancements.put(advancement.getKey().toString(), true);
-            }
-
-            config.set(path, advancements);
-
-            try {
-                config.save(advancementsFile);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-
+            AdvancementProgress progress = player.getAdvancementProgress(advancement);
+            advancements.put(advancement.getKey().toString(), progress.isDone());
         }
+
+        config.createSection(path, advancements);
+        //config.set(path, advancements);
+        savePlayerConfig(plugin, player, config);
     }
 
-    public static void loadAdvancements(JavaPlugin plugin, Player player, String worldName) {
-        File advancementsFile = new File(plugin.getDataFolder(), player.getUniqueId().toString() + "_advancements.yml");
-        if (!advancementsFile.exists()) {
-            return; // No saved advancements to restore
+    public void loadAdvancements(JavaPlugin plugin, Player player, String worldName) {
+        YamlConfiguration config = getPlayerConfig(plugin, player);
+        if (config == null) {
+            plugin.getLogger().warning("Configuration for player is null.");
+            return;
         }
 
-        YamlConfiguration config = YamlConfiguration.loadConfiguration(advancementsFile);
-        String path = worldName;
-
+        String path = worldName.trim();
         if (!config.contains(path)) {
-            plugin.getLogger().warning("AdvancementFile does not contain the path");
+            plugin.getLogger().warning("Configuration does not contain path: " + path);
             return; // No advancements for this world
         }
 
-        ConfigurationSection advancementsSection = config.getConfigurationSection(path);
-        if (advancementsSection == null) {
-            plugin.getLogger().warning("AdvancementFile with path does not contain any information");
-            return; // No advancements section found
+        ConfigurationSection section = config.getConfigurationSection(path);
+        if (section == null) {
+            plugin.getLogger().warning("No configuration section found for path: " + path);
+            plugin.getLogger().info("Available worlds in config: " + config.getKeys(false));
+            return;
         }
 
-        clearPlayerAdvancements(player);
-        isRestoring = true;
-        player.getWorld().setGameRule(GameRule.ANNOUNCE_ADVANCEMENTS, false); // Disable advancement announcements
-        for (String advancementKey : advancementsSection.getKeys(false)) {
-            boolean isDone = advancementsSection.getBoolean(advancementKey);
-            if (isDone) {
-                try {
-                    //plugin.getLogger().info("Processing advancement key: " + advancementKey); // Debugging log
-                    NamespacedKey key = parseKey(advancementKey);
-                    if (key != null) {
-                        Advancement advancement = Bukkit.getAdvancement(key);
-                        if (advancement != null) {
-                            AdvancementProgress progress = player.getAdvancementProgress(advancement);
-                            for (String criteria : progress.getRemainingCriteria()) {
-                                progress.awardCriteria(criteria);
-                            }
-                        } else {
-                            plugin.getLogger().warning("Advancement " + advancementKey + " not found for player " + player.getName());
-                        }
-                    } else {
-                        plugin.getLogger().warning("Invalid NamespacedKey format: " + advancementKey);
-                    }
-                } catch (IllegalArgumentException e) {
-                    plugin.getLogger().severe("Invalid advancement key: " + advancementKey + " for player " + player.getName());
-                    e.printStackTrace();
+        Map<String, Object> advancements = section.getValues(false);
+
+        player.getWorld().setGameRule(GameRule.ANNOUNCE_ADVANCEMENTS, false);
+        try {
+            clearPlayerAdvancements(player);
+
+            for (Map.Entry<String, Object> entry : advancements.entrySet()) {
+                NamespacedKey key = NamespacedKey.minecraft(entry.getKey());
+                boolean isDone = (Boolean) entry.getValue();
+                if (isDone && key != null) {
+                    awardAdvancement(player, key);
                 }
             }
-            isRestoring = false;
-            player.getWorld().setGameRule(GameRule.ANNOUNCE_ADVANCEMENTS, true); // Re-enable advancement announcements
-        }
-
-    }
-    private static NamespacedKey parseKey(String key) {
-        try {
-            // Split the key and ensure it's a valid NamespacedKey
-            String[] parts = key.split(":");
-            if (parts.length != 2) return null;
-            return new NamespacedKey(parts[0], parts[1]);
-        } catch (IllegalArgumentException e) {
-            return null; // Return null if key format is invalid
+        } finally {
+            player.getWorld().setGameRule(GameRule.ANNOUNCE_ADVANCEMENTS, true);
         }
     }
 
-
-    public static void clearPlayerAdvancements(Player player) {
+    public void clearPlayerAdvancements(Player player) {
         for (Iterator<Advancement> it = Bukkit.advancementIterator(); it.hasNext(); ) {
             Advancement advancement = it.next();
             AdvancementProgress progress = player.getAdvancementProgress(advancement);
             for (String criteria : progress.getAwardedCriteria()) {
                 progress.revokeCriteria(criteria);
             }
+        }
+    }
+
+    private static void awardAdvancement(Player player, NamespacedKey key) {
+        Advancement advancement = Bukkit.getAdvancement(key);
+        if (advancement != null) {
+            AdvancementProgress progress = player.getAdvancementProgress(advancement);
+            for (String criteria : progress.getRemainingCriteria()) {
+                progress.awardCriteria(criteria);
+            }
+        }
+    }
+
+    private YamlConfiguration getPlayerConfig(JavaPlugin plugin, Player player) {
+        return playerConfigs.computeIfAbsent(player, k -> loadConfiguration(plugin, player));
+    }
+
+    private YamlConfiguration loadConfiguration(JavaPlugin plugin, Player player) {
+        File advancementsFile = new File(plugin.getDataFolder(), "Advancements" + player.getUniqueId().toString() + ".yml");
+        return YamlConfiguration.loadConfiguration(advancementsFile);
+    }
+
+    private void savePlayerConfig(JavaPlugin plugin, Player player, YamlConfiguration config) {
+        try {
+            config.save(new File(plugin.getDataFolder(), "Advancements" + player.getUniqueId().toString() + ".yml"));
+        } catch (IOException e) {
+            plugin.getLogger().warning("Could not save advancements data for player: " + player.getName());
         }
     }
 }

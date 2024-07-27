@@ -9,14 +9,16 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public class PlayerJoinHandler implements Listener{
     private JavaPlugin plugin;
+    private LocationUtils locationUtils;
 
-    public PlayerJoinHandler(JavaPlugin plugin) {
+    public PlayerJoinHandler(JavaPlugin plugin, LocationUtils locationUtils) {
         this.plugin = plugin;
+        this.locationUtils = locationUtils;
     }
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
-         String baseWorldName = LocationUtils.getLoginWorld(plugin, event.getPlayer());
-         LocationUtils.setLocation(plugin, event.getPlayer(), baseWorldName, true );
+         String baseWorldName = locationUtils.getLoginWorld(plugin, event.getPlayer());
+         locationUtils.setLocation(plugin, event.getPlayer(), baseWorldName, true );
     }
 }
 

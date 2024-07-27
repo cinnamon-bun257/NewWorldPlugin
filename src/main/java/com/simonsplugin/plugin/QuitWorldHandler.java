@@ -12,18 +12,20 @@ import java.io.File;
 import java.io.IOException;
 
 public class QuitWorldHandler implements Listener {
-    private static JavaPlugin plugin;
+    private  JavaPlugin plugin;
+    private LocationUtils locationUtils;
 
-    public QuitWorldHandler(JavaPlugin plugin) {
+    public QuitWorldHandler(JavaPlugin plugin, LocationUtils locationUtils) {
         this.plugin = plugin;
+        this.locationUtils = locationUtils;
     }
     @EventHandler
     public void OnPlayerQuit(PlayerQuitEvent event){
-        LocationUtils.saveLocation(plugin, event.getPlayer(), true);
+        locationUtils.saveLocation(plugin, event.getPlayer(), true);
         plugin.getLogger().warning("player left in world " + event.getPlayer().getWorld().toString() );
     }
 
-    public static void saveData(boolean loginLocation, Player player){
+    public void saveData(boolean loginLocation, Player player){
         File playerDataFile = new File(plugin.getDataFolder(), "locationPlayerdata.yml");
         YamlConfiguration configLocation = YamlConfiguration.loadConfiguration(playerDataFile);
         String path;

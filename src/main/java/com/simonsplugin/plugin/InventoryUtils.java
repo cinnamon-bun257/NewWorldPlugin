@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.util.List;
 
 public class InventoryUtils {
-    public static void saveInventory(JavaPlugin plugin, Player player){
+    public void saveInventory(JavaPlugin plugin, Player player){
         File inventoryFile = new File(plugin.getDataFolder(), player.getUniqueId().toString() + "_inventory.yml");
         YamlConfiguration config = YamlConfiguration.loadConfiguration(inventoryFile);
 
@@ -25,7 +25,7 @@ public class InventoryUtils {
             e.printStackTrace();
         }
     }
-    public static void setInventory (JavaPlugin plugin, Player player, String worldName){
+    public void setInventory (JavaPlugin plugin, Player player, String worldName){
         File inventoryFile = new File(plugin.getDataFolder(), player.getUniqueId().toString() + "_inventory.yml");
         if (!inventoryFile.exists()) {
             return; // No saved inventory to restore
